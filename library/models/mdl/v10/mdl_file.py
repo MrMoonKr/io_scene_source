@@ -8,7 +8,7 @@ from .structs.bone import StudioBone
 from .structs.sequence import StudioSequence
 from .structs.studioheader import StudioHeader
 from .structs.texture import StudioTexture
-from SourceIO.library.shared.types import Vector3
+from SourceIO.library.shared.vector_types import Vector3
 
 
 @dataclass(slots=True)

@@ -186,12 +186,20 @@ class SourceIO_OT_LoadEntity(Operator):
         # it inherits the pose.
         self.apply_prop_pose(content_manager, model_container, prop_path, default_anim, mdl_file)
 
+        entity_ = obj["entity_data"]["entity"]
+
+        def apply_tint(o):
+            if "tint" in entity_:
+                tint_ = [float(a) for a in entity_["tint"].split(" ")]
+                o.color = tint_
+
         if use_collections:
             s1_put_into_collections(model_container, prop_path.stem, master_instance_collection, False)
             add_collection(prop_path, model_container.master_collection, default_anim)
 
             obj.instance_type = 'COLLECTION'
             obj.instance_collection = model_container.master_collection
+            apply_tint(obj)
             return
 
         imported_collection = get_or_create_collection(f"IMPORTED_{parent.name}", parent)
@@ -199,13 +207,17 @@ class SourceIO_OT_LoadEntity(Operator):
 
         if replace_entity:
             self.replace_placeholder(model_container, obj, True)
+            for o in model_container.objects:
+                apply_tint(o)
+
         else:
             if model_container.armature:
                 model_container.armature.parent = obj
             else:
                 for o in model_container.objects:
                     o.parent = obj
-
+            for o in model_container.objects:
+                apply_tint(o)
         # entity_data_holder = bpy.data.objects.new(model_container.mdl.header.name, None)
         # entity_data_holder['entity_data'] = {}
         # entity_data_holder['entity_data']['entity'] = obj['entity_data']['entity']

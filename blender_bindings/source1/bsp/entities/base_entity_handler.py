@@ -385,8 +385,8 @@ class BaseEntityHandler(AbstractEntityHandler):
     # def handle_item_dynamic_resupply(self, entity: item_dynamic_resupply, entity_raw: dict):
 
     def handle_light_spot(self, entity: light_spot, entity_raw: dict):
-        use_sdr = entity._lightHDR == [-1, -1, -1, -1]
-        color_value = entity._lightHDR if use_sdr else entity._light
+        use_sdr = entity._lighthdr == [-1, -1, -1, -1]
+        color_value = entity._lighthdr if use_sdr else entity._light
         color, brightness = _srgb_to_linear(color_value)
         scale = float(entity_raw.get('_lightscaleHDR', 1) if use_sdr else 1)
         cone = float(entity_raw.get('_cone', 0)) or 60
@@ -405,14 +405,14 @@ class BaseEntityHandler(AbstractEntityHandler):
         self._put_into_collection('light_spot', obj, 'lights')
 
     def handle_light_environment(self, entity: light_environment, entity_raw: dict):
-        use_sdr = entity._lightHDR == [-1, -1, -1, -1]
-        color_value = entity._lightHDR if use_sdr else entity._light
+        use_sdr = entity._lighthdr == [-1, -1, -1, -1]
+        color_value = entity._lighthdr if use_sdr else entity._light
         color, brightness = _srgb_to_linear(color_value)
         scale = float(entity_raw.get('_lightscaleHDR', 1) if use_sdr else 1)
 
         light: bpy.types.SunLight = bpy.data.lights.new(f'{entity.class_name}_{entity.hammer_id}', 'SUN')
         light.cycles.use_multiple_importance_sampling = True
-        light.angle = math.radians(entity.SunSpreadAngle)
+        light.angle = math.radians(entity.sunspreadangle)
         light.color = color
         light.energy = brightness * scale * self.light_power_multiplier / 100 * self.scale * self.light_scale
         obj: bpy.types.Object = bpy.data.objects.new(f'{entity.class_name}_{entity.hammer_id}', object_data=light)
@@ -447,8 +447,8 @@ class BaseEntityHandler(AbstractEntityHandler):
         self._put_into_collection('light_environment', obj, 'lights')
 
     def handle_light(self, entity: light, entity_raw: dict):
-        use_sdr = entity._lightHDR == [-1, -1, -1, -1]
-        color_value = entity._lightHDR if use_sdr else entity._light
+        use_sdr = entity._lighthdr == [-1, -1, -1, -1]
+        color_value = entity._lighthdr if use_sdr else entity._light
         color, brightness = _srgb_to_linear(color_value)
         scale = float(entity_raw.get('_lightscaleHDR', entity_raw.get('_lightscalehdr', 1)) if use_sdr else 1)
 
@@ -699,14 +699,13 @@ class BaseEntityHandler(AbstractEntityHandler):
 
     # TODO(ShadelessFox): Handle 2 or more keyframe_rope in a chain
     def handle_move_rope(self, entity: move_rope, entity_raw: dict):
-
-        if entity.NextKey is None:
+        if entity.nextkey is None:
             return
-        next_entity, next_raw = self._get_entity_by_name(entity.NextKey)
+        next_entity, next_raw = self._get_entity_by_name(entity.nextkey)
         next_entity: keyframe_rope
         next_raw: dict
         if not next_entity:
-            self.logger.error(f'Cannot find rope parent \'{entity.NextKey}\', skipping')
+            self.logger.error(f'Cannot find rope parent \'{entity.nextkey}\', skipping')
             return
         already_visited = set()
         while next_entity is not None and next_entity.targetname not in already_visited:
@@ -717,7 +716,7 @@ class BaseEntityHandler(AbstractEntityHandler):
             entity_raw = next_raw
             if "nextkey" not in entity_raw:
                 break
-            next_entity, next_raw = self._get_entity_by_name(entity.NextKey)
+            next_entity, next_raw = self._get_entity_by_name(entity.nextkey)
 
     def _create_rope_part(self, start_entity: move_rope, start_entity_raw: dict, end_entity: dict):
         location_start = np.multiply(parse_float_vector(start_entity_raw['origin']), self.scale)
@@ -725,11 +724,11 @@ class BaseEntityHandler(AbstractEntityHandler):
 
         curve = bpy.data.curves.new(self._get_entity_name(start_entity), 'CURVE')
         curve.dimensions = '3D'
-        curve.bevel_depth = float(start_entity.Width) / 100
+        curve.bevel_depth = float(start_entity.width) / 100
         curve_object = bpy.data.objects.new(self._get_entity_name(start_entity), curve)
         curve_path = curve.splines.new('NURBS')
 
-        slack = start_entity.Slack
+        slack = start_entity.slack
 
         # start/end in world scale
         point_start = (*location_start, 1)
@@ -747,7 +746,7 @@ class BaseEntityHandler(AbstractEntityHandler):
 
         curve_path.use_endpoint_u = True
 
-        material_name = start_entity.RopeMaterial
+        material_name = start_entity.ropematerial
         stripped_material_name = strip_patch_coordinates.sub("", material_name)
 
         mat = get_or_create_material(TinyPath(stripped_material_name).name, stripped_material_name)

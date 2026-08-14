@@ -11,6 +11,10 @@ from SourceIO.library.utils.tiny_path import TinyPath
 
 
 class Source1ShaderBase(ShaderBase):
+
+    _DEFAULT_TRANSFORM = {'center': (0.5, 0.5, 0), 'scale': (1.0, 1.0, 1),
+                          'rotate': (0, 0, 0), 'translate': (0, 0, 0)}
+
     def __init__(self, content_manager: ContentManager, vmt: VMT):
         super().__init__()
         self.content_manager = content_manager

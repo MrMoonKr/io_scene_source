@@ -6,6 +6,8 @@ from typing import Any
 """
 SourceIO vtf module
 """
+
+
 class ImageFormat(IntEnum):
     """
     Enum where members are also (and must be) ints
@@ -50,6 +52,7 @@ class ImageFormat(IntEnum):
     ATI2N: ImageFormat
     ATI1N: ImageFormat
 
+
 class MipFilter(IntEnum):
     """
     Enum where members are also (and must be) ints
@@ -69,29 +72,6 @@ class MipFilter(IntEnum):
     BLACKMAN: MipFilter
     KAISER: MipFilter
 
-class SharpenFilter(IntEnum):
-    """
-    Enum where members are also (and must be) ints
-    """
-    NONE: SharpenFilter
-    NEGATIVE: SharpenFilter
-    LIGHTER: SharpenFilter
-    DARKER: SharpenFilter
-    CONTRASTMORE: SharpenFilter
-    CONTRASTLESS: SharpenFilter
-    SMOOTHEN: SharpenFilter
-    SHARPENSOFT: SharpenFilter
-    SHARPENMEDIUM: SharpenFilter
-    SHARPENSTRONG: SharpenFilter
-    FINDEDGES: SharpenFilter
-    CONTOUR: SharpenFilter
-    EDGEDETECT: SharpenFilter
-    EDGEDETECTSOFT: SharpenFilter
-    EMBOSS: SharpenFilter
-    MEANREMOVAL: SharpenFilter
-    UNSHARP: SharpenFilter
-    XSHARPEN: SharpenFilter
-    WARPSHARP: SharpenFilter
 
 class TextureFlags(IntFlag):
     """
@@ -121,6 +101,7 @@ class TextureFlags(IntFlag):
     VERTEXTEXTURE: TextureFlags
     SSBUMP: TextureFlags
     BORDER: TextureFlags
+
 
 class VTFFile:
     bump_scale: Any
@@ -204,6 +185,12 @@ class VTFFile:
         """
         ...
 
+    def get_version(self: Any) -> tuple[int, int]:
+        """
+        Return tuple of version
+        """
+        ...
+
     def load(self: Any, path: Any, header_only: Any = ...) -> Any:
         """
         Load a VTF from a file path. If header_only is True, only parse the header.
@@ -241,11 +228,18 @@ class VTFFile:
         """
         ...
 
+    def set_version(self: Any, major: int, minor: int) -> Any:
+        """
+        Set version of the VTF file
+        """
+        ...
+
     def to_bytes(self: Any) -> Any:
         """
         Serialize the VTF to a bytes object (.vtf file contents).
         """
         ...
+
 
 def load_vtf_texture(input_data: Any, frame: int = ..., face: int = ..., mip: int = ...) -> Any:
     """
@@ -277,6 +271,7 @@ def load_vtf_texture(input_data: Any, frame: int = ..., face: int = ..., mip: in
     """
     ...
 
+
 def load_vtf_texture_frames(input_data: bytes, face: int = ..., mip: int = ...) -> list[Any]:
     """
     Load every animation frame of a VTF texture in one pass.
@@ -307,9 +302,9 @@ def load_vtf_texture_frames(input_data: bytes, face: int = ..., mip: int = ...) 
     """
     ...
 
+
 def version() -> Any:
     """
     Return VTFLib version string.
     """
     ...
-

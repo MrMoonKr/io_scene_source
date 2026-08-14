@@ -5,7 +5,7 @@ from enum import IntFlag
 import numpy as np
 import numpy.typing as npt
 
-from SourceIO.library.shared.types import Vector4, Vector3
+from SourceIO.library.shared.vector_types import Vector4, Vector3
 from SourceIO.library.utils.math_utilities import euler_to_quat
 from .bone import Bone
 from .compressed_vectors import Quat64, Quat48, Quat48S

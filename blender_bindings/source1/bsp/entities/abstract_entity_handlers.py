@@ -26,6 +26,16 @@ from SourceIO.logger import SourceLogMan
 strip_patch_coordinates = re.compile(r"_-?\d+_-?\d+_-?\d+.*$")
 log_manager = SourceLogMan()
 
+def get_origin(entity_raw: dict):
+    return parse_float_vector(entity_raw.get('origin', '0 0 0'))
+
+
+def get_angles(entity_raw: dict):
+    return parse_float_vector(entity_raw.get('angles', '0 0 0'))
+
+
+def get_scale(entity_raw: dict):
+    return parse_float_vector(entity_raw.get('scales', '0 0 0'))
 
 def gather_vertex_ids(model: Model, faces: list[Face], surf_edges: np.ndarray, edges: np.ndarray):
     vertex_offset = 0
@@ -500,8 +510,11 @@ class AbstractEntityHandler:
 
     @staticmethod
     def _get_entity_name(entity: Base):
+        raw_data = entity._raw_data
         if hasattr(entity, 'targetname') and entity.targetname:
             return str(entity.targetname)
+        elif "targetname" in raw_data:
+            return str(raw_data["targetname"])
         else:
             return f'{entity.class_name}_{entity.hammer_id}'
 

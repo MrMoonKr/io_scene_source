@@ -4,7 +4,7 @@ import bpy.types
 import numpy as np
 
 from SourceIO.library.utils import TinyPath
-from SourceIO.library.utils.pylib.vtf import VTFFile, ImageFormat, MipFilter, TextureFlags, SharpenFilter
+from SourceIO.library.utils.pylib.vtf import VTFFile, ImageFormat, MipFilter, TextureFlags
 from SourceIO.library.utils.math_utilities import srgb_to_linear, linear_to_srgb
 
 

@@ -172,7 +172,7 @@ class VMT:
         raw_value = self.get(name)
         if raw_value is None:
             return None
-        matrix = default
+        matrix = default.copy()
         tokens = raw_value.split()
 
         def take_numbers(count: int) -> list[float]:

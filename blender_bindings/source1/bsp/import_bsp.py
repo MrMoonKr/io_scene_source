@@ -37,6 +37,7 @@ from SourceIO.blender_bindings.source1.bsp.entities.csgo_entity_handlers import 
 from SourceIO.blender_bindings.source1.bsp.entities.halflife2_entity_handler import HalfLifeEntityHandler
 from SourceIO.blender_bindings.source1.bsp.entities.left4dead2_entity_handlers import Left4dead2EntityHandler
 from SourceIO.blender_bindings.source1.bsp.entities.portal2_entity_handlers import Portal2EntityHandler
+from SourceIO.blender_bindings.source1.bsp.entities.p2ce_entity_handlers import Portal2CEEntityHandler
 from SourceIO.blender_bindings.source1.bsp.entities.portal_entity_handlers import PortalEntityHandler
 from SourceIO.blender_bindings.source1.bsp.entities.tf2_entity_handler import TF2EntityHandler
 from SourceIO.blender_bindings.source1.bsp.entities.titanfall_entity_handler import TitanfallEntityHandler
@@ -97,6 +98,8 @@ def import_entities(bsp: VBSPFile, content_manager: ContentManager, settings: So
     elif (steam_id in [SteamAppId.PORTAL_2, SteamAppId.THINKING_WITH_TIME_MACHINE, SteamAppId.PORTAL_STORIES_MEL]
           and info.version != 29):  # Portal 2
         handler_class = Portal2EntityHandler
+    elif steam_id == SteamAppId.PORTAL_2_CE:
+        handler_class = Portal2CEEntityHandler
     elif steam_id in (SteamAppId.HALF_LIFE_2, SteamAppId.HALF_LIFE_2_EP_1, SteamAppId.HALF_LIFE_2_EP_2,
                       SteamAppId.HALF_LIFE_2_LOST_COAST, SteamAppId.HALF_LIFE_2_DEATHMATCH,
                       SteamAppId.COUNTER_STRIKE_SOURCE, SteamAppId.GARRYS_MOD):
@@ -162,18 +165,24 @@ def import_static_props(bsp: VBSPFile, settings: Source1BSPSettings, master_coll
                 placeholder.scale *= settings.scale
                 placeholder.empty_display_size = 16
 
+                entity = {
+                    'type': 'static_prop',
+                    'origin': '{} {} {}'.format(*prop.origin),
+                    'angles': '{} {} {}'.format(*prop.rotation),
+                    'scale': '{} {} {}'.format(*prop.scaling),
+                    'skin': str(prop.skin - 1 if prop.skin != 0 else 0),
+                }
+
+                if prop.diffuse_modulation:
+                    tint = [a / 255.0 for a in prop.diffuse_modulation]
+                    entity['tint'] = f'{tint[0]} {tint[1]} {tint[2]} {1.0}'
+
                 placeholder['entity_data'] = {'parent_path': str(bsp.filepath.parent),
                                               'prop_path': model_name,
                                               'scale': settings.scale,
                                               'type': 'static_props',
                                               'skin': str(prop.skin - 1 if prop.skin != 0 else 0),
-                                              'entity': {
-                                                  'type': 'static_prop',
-                                                  'origin': '{} {} {}'.format(*prop.origin),
-                                                  'angles': '{} {} {}'.format(*prop.rotation),
-                                                  'scale': '{} {} {}'.format(*prop.scaling),
-                                                  'skin': str(prop.skin - 1 if prop.skin != 0 else 0),
-                                              }
+                                              'entity': entity
                                               }
                 parent_collection.objects.link(placeholder)
 
