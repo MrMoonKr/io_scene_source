@@ -23,6 +23,7 @@ from SourceIO.library.shared.content_manager.detectors.titanfall1 import Titanfa
 from SourceIO.library.shared.content_manager.detectors.vindictus import VindictusDetector
 from SourceIO.library.shared.content_manager.detectors.vampire import VampireDetector
 from SourceIO.library.shared.content_manager.detectors.workshop import WorkshopDetector
+from SourceIO.library.shared.content_manager.detectors.bms import BlackMesaDetector
 from SourceIO.library.shared.content_manager.provider import ContentProvider
 from SourceIO.library.utils.tiny_path import TinyPath
 from SourceIO.logger import SourceLogMan
@@ -40,7 +41,7 @@ logger = log_manager.get_logger('game_detector')
 GAME_DETECTORS: list[ContentDetector] = [
     WorkshopDetector(),
     GoldSrcDetector(),
-    SFMDetector(), GModDetector(), InfraDetector(), Left4DeadDetector(),
+    SFMDetector(), GModDetector(), InfraDetector(), Left4DeadDetector(), BlackMesaDetector(),
     Portal2Detector(),
     Portal2RevolutionDetector(), Portal2CommunityEditionDetector(), CSGODetector(), SourceMod(), Source1Detector(),
     # VindictusDetector(), TitanfallDetector(),

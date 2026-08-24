@@ -53,6 +53,12 @@ class LightmapGeneric(DetailSupportMixin, Source1ShaderBase):
     #: parameter does not exist for that shader. Subclasses can opt out.
     SUPPORTS_ALPHATESTREFERENCE = True
 
+    #: Socket carrying the *blended* base alpha, when a subclass builds one.
+    #: The SDK's ``$basealphaenvmapmask`` reads ``1.0 - blendedAlpha``, not layer 1's
+    #: alpha; the two-way blend here does not track alpha separately, so this stays
+    #: None and ``$basetexture``'s own alpha is used.
+    _blended_alpha_output = None
+
     # ------------------------------------------------------------------ textures
 
     @property
@@ -211,17 +217,7 @@ class LightmapGeneric(DetailSupportMixin, Source1ShaderBase):
         shader = self.create_node(Nodes.ShaderNodeBsdfPrincipled, self.SHADER)
         self.connect_nodes(shader.outputs['BSDF'], material_output.inputs['Surface'])
 
-        uv_node = self.create_node(Nodes.ShaderNodeUVMap)
-        uv_out = uv_node.outputs[0]
-
-        seamless_scale = self.seamless_scale
-        if seamless_scale:
-            # $seamless_scale rescales the (world-space projected) UVs.
-            scale_node = self.create_node(Nodes.ShaderNodeVectorMath, 'seamless_scale')
-            scale_node.operation = 'SCALE'
-            self.connect_nodes(uv_out, scale_node.inputs[0])
-            scale_node.inputs['Scale'].default_value = seamless_scale
-            uv_out = scale_node.outputs[0]
+        uv_node, uv_out = self._build_uv_chain()
 
         # `blend_output` carries the SDK's `blendfactor`, shared by the albedo and
         # normal blends. It stays None when there is only one layer.
@@ -253,6 +249,27 @@ class LightmapGeneric(DetailSupportMixin, Source1ShaderBase):
             self._setup_selfillum(shader, albedo_output, basetexture_node)
 
         self._setup_envmap(shader, basetexture_node, bumpmap_node, uv_node, uv_out)
+
+    def _build_uv_chain(self):
+        """Return ``(uv_node, uv_out)`` -- the texture coordinates every layer shares.
+
+        Split out so subclasses can substitute a different coordinate source while
+        still handing the plain UVMap node to things that need real UVs (detail
+        textures, ``$*transform`` mappings). :class:`Lightmapped4WayBlend` overrides
+        this to implement ``$seamless_scale`` as a world-space projection.
+        """
+        uv_node = self.create_node(Nodes.ShaderNodeUVMap)
+        uv_out = uv_node.outputs[0]
+
+        seamless_scale = self.seamless_scale
+        if seamless_scale:
+            # $seamless_scale rescales the (world-space projected) UVs.
+            scale_node = self.create_node(Nodes.ShaderNodeVectorMath, 'seamless_scale')
+            scale_node.operation = 'SCALE'
+            self.connect_nodes(uv_out, scale_node.inputs[0])
+            scale_node.inputs['Scale'].default_value = seamless_scale
+            uv_out = scale_node.outputs[0]
+        return uv_node, uv_out
 
     def _apply_transform(self, transform, texture_node, uv_node, uv_out):
         """Feed ``texture_node`` from ``uv_out``, inserting a Mapping when needed.
@@ -489,10 +506,14 @@ class LightmapGeneric(DetailSupportMixin, Source1ShaderBase):
             mask_output = mask_node.outputs['Color']
         elif self.normalmapalphaenvmapmask and bumpmap_node is not None:
             mask_output = bumpmap_node.outputs['Alpha']
-        elif self.basealphaenvmapmask and basetexture_node is not None:
+        elif self.basealphaenvmapmask and (self._blended_alpha_output is not None
+                                           or basetexture_node is not None):
             # SDK: `specularFactor *= 1.0 - blendedAlpha` -- note the inversion.
+            alpha_output = self._blended_alpha_output
+            if alpha_output is None:
+                alpha_output = basetexture_node.outputs['Alpha']
             invert = self.create_node(Nodes.ShaderNodeInvert, 'basealphaenvmapmask')
-            self.connect_nodes(basetexture_node.outputs['Alpha'], invert.inputs['Color'])
+            self.connect_nodes(alpha_output, invert.inputs['Color'])
             mask_output = invert.outputs['Color']
 
         # $envmaptint / $envmapcontrast / $envmapsaturation all scale the

@@ -212,6 +212,7 @@ class AbstractEntityHandler:
         entity_lump = self._bsp.get_lump('LUMP_ENTITIES')
         for entity_data in entity_lump.entities:
             entity_class: str = entity_data['classname']
+            entity_class = entity_class.strip().lower()
             if entity_class.startswith("info_") and not settings.load_info:
                 continue
             elif "decal" in entity_class and not settings.load_decals:

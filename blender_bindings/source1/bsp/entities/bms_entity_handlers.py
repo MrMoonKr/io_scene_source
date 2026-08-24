@@ -3,9 +3,6 @@ import math
 import bpy
 from mathutils import Euler
 
-import numpy as np
-
-from .abstract_entity_handlers import AbstractEntityHandler
 from .bms_entity_classes import *
 from .halflife2_entity_handler import HalfLifeEntityHandler
 from SourceIO.library.utils.math_utilities import srgb_to_linear
@@ -16,6 +13,8 @@ local_entity_lookup_table.update(entity_class_handle)
 
 class BlackMesaEntityHandler(HalfLifeEntityHandler):
     entity_lookup_table = local_entity_lookup_table
+    entity_lookup_table["newLight_Point"] = Base
+    entity_lookup_table["newLight_Spot"] = Base
     pointlight_power_multiplier = 1
 
     def handle_newlight_point(self, entity: newLight_Point, entity_raw: dict):
