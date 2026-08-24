@@ -1,8 +1,4 @@
-from pprint import pprint
-
-from SourceIO.library.utils import TinyPath
-from SourceIO.library.utils.kv_parser import ValveKeyValueParser
-from SourceIO.library.utils.s1_keyvalues import KVParser
+from SourceIO.library.utils.kv1 import loads
 
 
 def test_kv1_duplicated_keys():
@@ -32,14 +28,21 @@ def test_kv1_duplicated_keys():
 	"UserSettingsFileEx"	"cs2_"
 }"""
 
-    parser = ValveKeyValueParser(None, (data, ""))
-    parser.parse()
-    root = parser.tree
+    root = loads(data, 'cs2 gameinfo')
     search_paths = root["FileSystem"]["SearchPaths"]
-    game = search_paths["Game"]
-    games = search_paths.get_multiple("game")
-    all_paths = search_paths.items()
-    print(root["FileSystem"]["SearchPaths"])
-    print(game)
-    print(games)
-    print(list(all_paths))
+
+    # `get` returns the first match, like KeyValues::FindKey
+    assert search_paths["Game"] == "csgo"
+    assert search_paths.get_multiple("game") == ["csgo", "csgo_imported", "csgo_core",
+                                                 "core"]
+    assert search_paths.get_all("mod") == ["csgo", "csgo_imported", "csgo_core"]
+
+    # ordered, duplicates preserved -- mount precedence depends on it
+    keys = [key for key, _ in search_paths.items()]
+    assert keys.count("game") == 4
+    assert keys.index("game_lowviolence") < keys.index("game")
+
+    # both LayeredGameRoot entries are gated on $MOBILE, which is false on PC
+    assert "layeredgameroot" not in search_paths
+
+    assert root["FileSystem"]["UserSettingsPathID"] == "USRLOCAL"

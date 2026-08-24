@@ -23,7 +23,7 @@ from SourceIO.library.shared.content_manager.provider import ContentProvider
 from SourceIO.library.shared.content_manager.providers.gma_provider import GMAContentProvider
 from SourceIO.library.shared.content_manager.providers.loose_files import LooseFilesContentProvider
 from SourceIO.library.shared.content_manager.providers.vpk_provider import VPKContentProvider
-from SourceIO.library.utils.kv_parser import ValveKeyValueParser
+from SourceIO.library.utils import kv1
 from SourceIO.library.utils.tiny_path import TinyPath
 from SourceIO.logger import SourceLogMan
 
@@ -95,10 +95,9 @@ class WorkshopDetector(ContentDetector):
         if not manifest.exists():
             return None
         try:
-            parser = ValveKeyValueParser(manifest)
-            parser.parse()
-            _, app_state = parser.tree.top()
-            install_name = app_state.get('installdir')
+            # Steam escapes path separators in its own files, unlike VMT/gameinfo.
+            _, app_state = kv1.load(manifest, escapes=True).top()
+            install_name = app_state.get_string('installdir')
         except Exception as ex:
             logger.warn(f'Failed to parse {manifest}: {ex}')
             return None
@@ -122,9 +121,7 @@ class WorkshopDetector(ContentDetector):
         if not registry.exists():
             return []
         try:
-            parser = ValveKeyValueParser(registry)
-            parser.parse()
-            _, folders = parser.tree.top()
+            _, folders = kv1.load(registry, escapes=True).top()
         except Exception as ex:
             logger.warn(f'Failed to parse {registry}: {ex}')
             return []
@@ -132,7 +129,7 @@ class WorkshopDetector(ContentDetector):
         for _, entry in folders.items():
             # Modern Steam nests a block per library; very old versions stored a
             # bare path string.
-            library_path = entry.get('path') if hasattr(entry, 'get') else entry
+            library_path = entry.get_string('path') if isinstance(entry, kv1.KV1Block) else entry
             if not library_path:
                 continue
             library = TinyPath(str(library_path)) / 'steamapps'

@@ -6,7 +6,7 @@ from SourceIO.library.shared.content_manager.providers import register_provider
 from SourceIO.library.shared.content_manager.providers.loose_files import LooseFilesContentProvider
 from SourceIO.library.shared.content_manager.providers.vpk_provider import VPKContentProvider
 from SourceIO.library.utils import Buffer, TinyPath
-from SourceIO.library.utils.kv_parser import ValveKeyValueParser
+from SourceIO.library.utils import kv1
 from SourceIO.logger import SourceLogMan
 
 log_manager = SourceLogMan()
@@ -17,9 +17,7 @@ class Source2GameInfoProvider(ContentProvider):
     def __init__(self, filepath: TinyPath, steamapp_id: SteamAppId = SteamAppId.UNKNOWN):
         super().__init__(filepath)
 
-        parser = ValveKeyValueParser(filepath)
-        parser.parse()
-        root = parser.tree
+        root = kv1.load(filepath)
         self.data = root["gameinfo"]
         self.filesystem: dict[str, Any] = self.data["filesystem"]
         self._steamapp_id = steamapp_id

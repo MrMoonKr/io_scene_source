@@ -12,7 +12,7 @@ from SourceIO.library.models.mdl.structs.material import MaterialV49
 from SourceIO.library.models.mdl.structs.sequence import StudioSequence
 from SourceIO.library.models.mdl.v44.mdl_file import MdlV44
 from SourceIO.library.utils import Buffer
-from SourceIO.library.utils.kv_parser import KVParserException, ValveKeyValueParser
+from SourceIO.library.utils import kv1
 from SourceIO.logger import SourceLogMan
 
 log_manager = SourceLogMan()
@@ -128,15 +128,13 @@ class MdlV49(MdlV44):
 
         buffer.seek(header.key_value_offset)
         key_values_raw = buffer.read(header.key_value_size).strip(b'\x00').decode('latin1')
-        key_values = {}
+        # A bare sequence of `{ ... }` blocks; the parser reports damage itself and
+        # never raises, so a broken blob costs the keyvalues rather than the model.
+        key_values = kv1.KV1Block()
         if key_values_raw:
-            try:
-                parser = ValveKeyValueParser(buffer_and_name=(key_values_raw, 'memory'), self_recover=True,
-                                             array_of_blocks=True)
-                parser.parse()
-                key_values = parser.tree[0]
-            except KVParserException as e:
-                logger.exception('Failed to parse key values due to', e)
+            blocks = kv1.loads_blocks(key_values_raw, 'mdl keyvalues')
+            if blocks:
+                key_values = blocks[0]
 
         return cls(header, bones, skin_groups, materials, materials_paths, flex_names, flex_controllers,
                    flex_ui_controllers, flex_rules, body_parts, attachments, local_animations, local_sequences,

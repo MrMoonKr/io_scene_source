@@ -6,7 +6,7 @@ from SourceIO.library.shared.content_manager.providers import register_provider
 from SourceIO.library.shared.content_manager.providers.loose_files import LooseFilesContentProvider
 from SourceIO.library.shared.content_manager.providers.vpk_provider import VPKContentProvider
 from SourceIO.library.utils import Buffer, TinyPath
-from SourceIO.library.utils.kv_parser import ValveKeyValueParser
+from SourceIO.library.utils import kv1
 from SourceIO.logger import SourceLogMan
 
 log_manager = SourceLogMan()
@@ -16,9 +16,7 @@ logger = log_manager.get_logger('GameInfoProvider')
 class Source1GameInfoProvider(ContentProvider):
     def __init__(self, filepath: TinyPath):
         super().__init__(filepath)
-        parser = ValveKeyValueParser(filepath)
-        parser.parse()
-        root = parser.tree
+        root = kv1.load(filepath)
 
         if "gameinfo" not in root:
             raise ValueError("Invalid gameinfo header")
